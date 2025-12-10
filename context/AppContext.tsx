@@ -20,47 +20,102 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Mock Initial Data
+// ---------------------------------------------------------
+// منطقة تعديل قائمة الطعام الافتراضية
+// يمكنك تغيير الأسماء، الأسعار، والصور هنا
+// ---------------------------------------------------------
 const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'برجر نجف الخاص', description: 'قطعة لحم بلدي مشوية مع صوص نجف السري والجبنة السويسرية', price: 85, category: 'برجر', image: 'https://picsum.photos/400/400?random=1' },
-  { id: '2', name: 'بيتزا سوبريم', description: 'عجينة رقيقة مقرمشة مع خضروات طازجة وبيبروني', price: 120, category: 'بيتزا', image: 'https://picsum.photos/400/400?random=2' },
-  { id: '3', name: 'باستا ألفريدو', description: 'مكرونة فيتوتشيني مع صوص الكريمة والدجاج', price: 95, category: 'مكرونة', image: 'https://picsum.photos/400/400?random=3' },
-  { id: '4', name: 'كولا باردة', description: 'مشروب غازي منعش مع الثلج', price: 15, category: 'مشروبات', image: 'https://picsum.photos/400/400?random=4' },
+  { 
+    id: '1', 
+    name: 'برجر نجف الخاص', 
+    description: 'قطعة لحم بلدي مشوية مع صوص نجف السري والجبنة السويسرية', 
+    price: 85, 
+    category: 'برجر', 
+    image: 'https://picsum.photos/400/400?random=1' 
+  },
+  { 
+    id: '2', 
+    name: 'بيتزا سوبريم', 
+    description: 'عجينة رقيقة مقرمشة مع خضروات طازجة وبيبروني', 
+    price: 120, 
+    category: 'بيتزا', 
+    image: 'https://picsum.photos/400/400?random=2' 
+  },
+  { 
+    id: '3', 
+    name: 'باستا ألفريدو', 
+    description: 'مكرونة فيتوتشيني مع صوص الكريمة والدجاج', 
+    price: 95, 
+    category: 'مكرونة', 
+    image: 'https://picsum.photos/400/400?random=3' 
+  },
+  { 
+    id: '4', 
+    name: 'كولا باردة', 
+    description: 'مشروب غازي منعش مع الثلج', 
+    price: 15, 
+    category: 'مشروبات', 
+    image: 'https://picsum.photos/400/400?random=4' 
+  },
 ];
+// ---------------------------------------------------------
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  
+  // Load products from LocalStorage if available AND not empty, otherwise use INITIAL_PRODUCTS
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If parsed is an array and has items, use it. Otherwise use initial.
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load products from storage", e);
+    }
+    return INITIAL_PRODUCTS;
   });
+  
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('orders');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
   });
 
-  // Sound Effect
+  // Sound Effect Configuration
   const playNotificationSound = () => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(500, audioCtx.currentTime); 
-    oscillator.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+      // Sound type: 'sine', 'square', 'sawtooth', 'triangle'
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(500, audioCtx.currentTime); 
+      oscillator.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
 
-    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
 
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.5);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+      console.error("Audio context not supported", e);
+    }
   };
 
-  // Sync to LocalStorage
+  // Sync Data to Browser LocalStorage (Persistence)
   useEffect(() => {
     localStorage.setItem('products', JSON.stringify(products));
   }, [products]);
@@ -69,19 +124,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem('orders', JSON.stringify(orders));
   }, [orders]);
 
-  // Simulate receiving orders (polling for demo purposes if multiple tabs were open, 
-  // but here primarily to catch updates from the same session effectively)
+  // Real-time Simulation (Check for new orders every 2 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       const storedOrders = localStorage.getItem('orders');
       if (storedOrders) {
-        const parsedOrders: Order[] = JSON.parse(storedOrders);
-        if (parsedOrders.length > orders.length) {
-            // New order detected from another tab/session
-            setOrders(parsedOrders);
-            if (userRole && userRole !== UserRole.CUSTOMER) {
-                playNotificationSound();
-            }
+        try {
+          const parsedOrders: Order[] = JSON.parse(storedOrders);
+          if (parsedOrders.length > orders.length) {
+              setOrders(parsedOrders);
+              // Play sound only for staff
+              if (userRole && userRole !== UserRole.CUSTOMER) {
+                  playNotificationSound();
+              }
+          }
+        } catch (e) {
+          // ignore parsing errors
         }
       }
     }, 2000);
@@ -133,19 +191,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isNew: true
     };
 
-    setOrders(prev => [newOrder, ...prev]);
-    clearCart();
+    // Update local state and immediately force localStorage update for other tabs/roles
+    const updatedOrders = [newOrder, ...orders];
+    setOrders(updatedOrders);
+    localStorage.setItem('orders', JSON.stringify(updatedOrders));
     
-    // Simulate notification if an admin was watching (mocked by same session for now)
-    // In a real app, this would be a socket emit.
+    clearCart();
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    const updatedOrders = orders.map(o => o.id === orderId ? { ...o, status } : o);
+    setOrders(updatedOrders);
+    localStorage.setItem('orders', JSON.stringify(updatedOrders));
   };
 
   const markOrderAsSeen = (orderId: string) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isNew: false } : o));
+    const updatedOrders = orders.map(o => o.id === orderId ? { ...o, isNew: false } : o);
+    setOrders(updatedOrders);
+    localStorage.setItem('orders', JSON.stringify(updatedOrders));
   };
 
   return (

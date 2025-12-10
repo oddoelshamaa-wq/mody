@@ -18,6 +18,9 @@ const CustomerApp: React.FC = () => {
     e.preventDefault();
     placeOrder(formData);
     setOrderPlaced(true);
+    // ---------------------------------------------------------
+    // التحكم في مدة عرض رسالة النجاح (3000 = 3 ثواني)
+    // ---------------------------------------------------------
     setTimeout(() => {
         setOrderPlaced(false);
         setView('MENU');
@@ -40,13 +43,20 @@ const CustomerApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
-      {/* Header */}
+      {/* 
+         ---------------------------------------------------------
+         Header Section (رأس الصفحة)
+         غير اسم المطعم هنا
+         ---------------------------------------------------------
+      */}
       <header className="bg-white shadow-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2 space-x-reverse cursor-pointer" onClick={() => setView('MENU')}>
+            {/* Logo Box */}
             <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
               نجف
             </div>
+            {/* Brand Name */}
             <h1 className="text-2xl font-bold text-gray-800">مطعم نجف</h1>
           </div>
           
@@ -82,6 +92,7 @@ const CustomerApp: React.FC = () => {
                      <span className="font-bold text-orange-600 text-lg">{product.price} ر.س</span>
                    </div>
                    <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow">{product.description}</p>
+                   {/* Add to Cart Button */}
                    <button 
                      onClick={() => addToCart(product)}
                      className="w-full bg-gray-900 text-white py-3 rounded-xl hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 font-medium active:scale-95 transform duration-100"
