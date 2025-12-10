@@ -1,0 +1,5 @@
+{
+  "name": "Najaf Restaurant System",
+  "description": "A comprehensive restaurant management system featuring a customer ordering interface and a multi-role admin dashboard with real-time order tracking and AI-powered menu management.",
+  "requestFramePermissions": []
+}
